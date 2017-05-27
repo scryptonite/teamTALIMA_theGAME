@@ -33,9 +33,26 @@ public class Launcher : PunBehaviour {
     void Start() {
         networkManager = FindObjectOfType<MyNetworkManager>();
 
-#if UNITY_EDITOR
-		field.text = string.Format("KappaMan{0}", Random.Range(0, 10000).ToString().PadLeft(4, '0'));
-#endif
+		var prefixes = new string[] {
+			"Kappa",
+			"PogChamp",
+			"Keepo",
+			"FeelsGoodMan",
+			"FeelsBadMan",
+			"SwiftRage",
+			"teamTALIMA",
+			"Beastie",
+			"MrDestructoid",
+			"OhMyDog",
+			"ResidentSleeper",
+			"CoolStoryBob",
+			"CoolCat",
+			"\u0295\u2022\u1d25\u2022\u0294",
+			"VoHiYo",
+			"RaccAttack"
+		};
+		field.text = string.Format("{0}{1}", prefixes[Random.Range(0, prefixes.Length)], Random.Range(0, 1000000).ToString().PadLeft(6, '0'));
+
 		progressLabel.gameObject.SetActive(false);
 		field.onValueChanged.AddListener((str) => {
 			var text = field.text.Trim();

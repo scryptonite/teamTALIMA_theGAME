@@ -8,6 +8,7 @@ TagManager:
   - Respawn Shield
   - Rolling Toggle
   - Teleport Button
+  - AI Control Toggle
   layers:
   - Default
   - TransparentFX
