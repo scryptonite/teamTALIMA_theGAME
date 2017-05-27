@@ -1,16 +1,19 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Photon;
 
-public class Launcher : PunBehaviour, ISubmitHandler {
+public class Launcher : PunBehaviour {
 
     [Tooltip("UI InputField for player username")]
-    InputField field;
-    [Tooltip("UI Text informing player the connection is in progress")]
-    public GameObject progressLabel;
+    public InputField field;
+	[Tooltip("UI Text informing player the connection is in progress")]
+	public Text progressLabel;
+	[Tooltip("UI Button for submitting the player username to the server")]
+	public Button playButton;
 
-    public PhotonLogLevel Loglevel = PhotonLogLevel.Informational;
+
+	public PhotonLogLevel Loglevel = PhotonLogLevel.Informational;
 
     MyNetworkManager networkManager;
     string _gameVersion = "0.0.2";
@@ -29,25 +32,49 @@ public class Launcher : PunBehaviour, ISubmitHandler {
 
     void Start() {
         networkManager = FindObjectOfType<MyNetworkManager>();
-        field = GameObject.FindGameObjectWithTag("Username Input").GetComponent<InputField>();
-        progressLabel.SetActive(false);
-    }
 
-    void Update() {
-        // fire Submit event when InputField is not focused
-        if (!field.isFocused && field.text != "" && Input.GetButtonDown("Submit")) {
-            PassUsername();
-        }
-    }
+#if UNITY_EDITOR
+		field.text = string.Format("KappaMan{0}", Random.Range(0, 10000).ToString().PadLeft(4, '0'));
+#endif
+		progressLabel.gameObject.SetActive(false);
+		field.onValueChanged.AddListener((str) => {
+			var text = field.text.Trim();
+			var submittable = text.Length > 0 && text.Length <= 32;
+			playButton.interactable = field.interactable && submittable;
+		});
+		field.interactable = true;
 
-    // fire Submit event when InputField is focused
-    void ISubmitHandler.OnSubmit(BaseEventData eventData) {
-        PassUsername();
-    }
+		playButton.onClick.AddListener(() => {
+			if (playButton.interactable) {
+				field.interactable = false;
+				playButton.interactable = false;
+				PassUsername();
+			}
+		});
+		playButton.interactable = false;
 
-    // Pass inputed username to NetworkManager to instantiate new player - Button.onClick()
-    public void PassUsername() {
-        networkManager.ReceiveUsername(field.text + " ");
+		field.onEndEdit.AddListener((result) => {
+			if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) {
+				field.onValueChanged.Invoke(result);
+				playButton.onClick.Invoke();
+				FocusField();
+			}
+		});
+
+		FocusField();
+		field.onValueChanged.Invoke(field.text);
+	}
+
+	void FocusField() {
+		EventSystem.current.SetSelectedGameObject(field.gameObject, null);
+		field.OnPointerClick(new PointerEventData(EventSystem.current));
+	}
+
+	// Pass inputed username to NetworkManager to instantiate new player - Button.onClick()
+	void PassUsername() {
+		var username = field.text.Trim();
+		username = username.Substring(0, Mathf.Min(username.Length, 32));
+		networkManager.ReceiveUsername(username);
         Connect();
         Debug.Log("<Color=Blue>PassUsername()</Color> -- We call Connect()");
     }
@@ -57,7 +84,7 @@ public class Launcher : PunBehaviour, ISubmitHandler {
     /// </summary>
     public void Connect() {
         isConnecting = true;
-        progressLabel.SetActive(true);
+        progressLabel.gameObject.SetActive(true);
         Debug.Log("<Color=Blue>Connect()</Color> -- isConnecting was just set to: " + isConnecting);
 
         // are we connected
@@ -101,6 +128,6 @@ public class Launcher : PunBehaviour, ISubmitHandler {
 
     public override void OnDisconnectedFromPhoton() {
         Debug.LogWarning("<Color=Red>OnDisconnectedFromPhoton()</Color>");
-        progressLabel.SetActive(false);
+		progressLabel.gameObject.SetActive(false);
     }
 }
