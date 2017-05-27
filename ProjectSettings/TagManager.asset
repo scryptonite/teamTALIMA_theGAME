@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Username Input
+  - Respawn Shield
+  - Rolling Toggle
+  - Teleport Button
   layers:
   - Default
   - TransparentFX
@@ -37,7 +40,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - World
   m_SortingLayers:
   - name: Default
     uniqueID: 0
