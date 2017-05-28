@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon;
@@ -36,6 +37,7 @@ public class PlayerController : PunBehaviour {
         //txtPlayerUsername.text = networkManager.playerUsername;
         playerCanvas = transform.Find("Player Canvas");
         txtPlayerUsername.text = photonView.owner.NickName;
+		Debug.LogFormat("User '{0}' appeared!", photonView.owner.NickName);
 
 
 		gameObject.name = string.Format("Player \"{0}\"", photonView.owner.NickName.Trim());
@@ -70,47 +72,91 @@ public class PlayerController : PunBehaviour {
 			yield return null;
 			if (!aiMovement) continue;
 
-			var target2d = new Vector2(Random.Range(-4, 4), Random.Range(-4, 4));
+			var players = new List<PlayerController>();
+			players.AddRange(
+				GameObject.FindObjectsOfType<PlayerController>().Where(
+					player => !player.photonView.isMine
+				)
+			);
+			var action = Random.Range(0, 3);
 
-			while (true) {
-				yield return null;
-				if (!aiMovement) break;
-				var target3d = new Vector3(
-					target2d.x,
-					transform.position.y > -50 ? transform.position.y : 50,
-					target2d.y
-				);
-				//transform.rotation = Quaternion.Lerp(
-				//	transform.rotation,
-				//	Quaternion.Euler(0, Vector2.Angle(new Vector2(transform.position.x, transform.position.z), target2d), 0),
-				//	180f * Time.deltaTime
-				//);
+			if (action == 0 && players.Count == 0)
+				action = 1;
 
-				var targetQ = Quaternion.LookRotation(
-					transform.position - target3d,
-					Vector3.up
-				);
-
-				float movespeed = Mathf.DeltaAngle(transform.rotation.eulerAngles.y, targetQ.eulerAngles.y);
-				movespeed = Mathf.Max(0f, ((180f - movespeed) / 180f) - 0.5f);
-				movespeed *= 1.5f;
-
-				transform.rotation = Quaternion.Lerp(
-					transform.rotation,
-					targetQ,
-					2f * Time.deltaTime
-				);
-				
-				transform.position = Vector3.MoveTowards(
-					transform.position,
-					target3d,
-					movespeed * Time.deltaTime
-				);
-
-				if ((transform.position - target3d).magnitude < 0.01) {
-					yield return new WaitForSeconds(Random.Range(1f, 3f));
+			switch (action) {
+				case 0: {
+						var player = players[Random.Range(0, players.Count)];
+						var start = Time.time;
+						var time = Random.Range(20f, 30f);
+						while (true) {
+							yield return null;
+							var duration = Time.time - start;
+							if (duration > time
+							|| player == null || player.transform == null) {
+								yield return new WaitForSeconds(0.5f);
+								break;
+							}
+							if (!aiMovement) break;
+							transform.rotation = Quaternion.Lerp(
+								transform.rotation,
+								Quaternion.LookRotation(
+									Vector3.Scale((transform.position - player.transform.position).normalized, new Vector3(1f, 0f, 1f)),
+									Vector3.up
+								),
+								180f * Time.deltaTime
+							);
+							var distance = (transform.position - player.transform.position).magnitude;
+							if (distance < 3f) {
+								var speed = 2f + (3f - distance);
+								transform.Translate(-Vector3.back * Time.deltaTime * speed);
+							}
+						}
+					}
 					break;
-				}
+				case 1:
+				case 2: {
+						var target2d = new Vector2(Random.Range(-4, 4), Random.Range(-4, 4));
+						while (true) {
+							yield return null;
+							if (!aiMovement) break;
+							var target3d = new Vector3(
+								target2d.x,
+								transform.position.y > -50 ? transform.position.y : 50,
+								target2d.y
+							);
+							//transform.rotation = Quaternion.Lerp(
+							//	transform.rotation,
+							//	Quaternion.Euler(0, Vector2.Angle(new Vector2(transform.position.x, transform.position.z), target2d), 0),
+							//	180f * Time.deltaTime
+							//);
+
+							var targetQ = Quaternion.LookRotation(
+								transform.position - target3d,
+								Vector3.up
+							);
+
+							float movespeed = Mathf.Abs(Mathf.DeltaAngle(transform.rotation.eulerAngles.y, targetQ.eulerAngles.y));
+							movespeed = Mathf.Max(0f, ((180f - movespeed) / 180f) - 0.5f) * 2f;
+
+							transform.rotation = Quaternion.Lerp(
+								transform.rotation,
+								targetQ,
+								2f * Time.deltaTime
+							);
+
+							transform.position = Vector3.MoveTowards(
+								transform.position,
+								target3d,
+								movespeed * Time.deltaTime
+							);
+
+							if ((transform.position - target3d).magnitude < 0.01) {
+								yield return new WaitForSeconds(Random.Range(1f, 3f));
+								break;
+							}
+						}
+					}
+					break;
 			}
 		}
 	}

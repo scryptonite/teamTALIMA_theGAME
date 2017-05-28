@@ -266,7 +266,7 @@ MonoBehaviour:
   field: {fileID: 1212291518}
   progressLabel: {fileID: 1301191533}
   playButton: {fileID: 1813854863}
-  Loglevel: 1
+  Loglevel: 0
 --- !u!1 &536938833
 GameObject:
   m_ObjectHideFlags: 0
