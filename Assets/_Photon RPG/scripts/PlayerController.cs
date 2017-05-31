@@ -230,6 +230,10 @@ public class PlayerController : PunBehaviour {
 		var lmb = Input.GetMouseButton(0);
 		var rmb = Input.GetMouseButton(1);
 		var w = Input.GetKey(KeyCode.W);
+		var t = Input.GetKeyUp(KeyCode.T);
+		var y = Input.GetKeyUp(KeyCode.Y);
+		if (ctrl && t) PhotonNetwork.HelloWorld();
+		if (ctrl && y) PhotonNetwork.PseudoHelloWorld();
 
 		var piv = Input.GetAxis("Pivot") * (ctrl ? 240f : 180f) * Time.deltaTime;
 		var rot = Input.GetAxis("Horizontal") * (ctrl ? 360f : 180f) * Time.deltaTime;

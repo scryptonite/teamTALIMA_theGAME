@@ -64,10 +64,24 @@ public static class PhotonNetwork
     /// <summary>Currently used server address (no matter if master or game server).</summary>
     public static string ServerAddress { get { return (networkingPeer != null) ? networkingPeer.ServerAddress : "<not connected>"; } }
 
-    /// <summary>
-    /// False until you connected to Photon initially. True in offline mode, while connected to any server and even while switching servers.
-    /// </summary>
-    public static bool connected
+	public static void HelloWorld() {
+		if (networkingPeer != null) {
+			Debug.Log("<color=magenta>HelloWorld op sent to the server!</color>");
+			networkingPeer.OpCustom((byte)190, new Dictionary<byte, object>() { }, true);
+		}
+	}
+
+	public static void PseudoHelloWorld() {
+		if (networkingPeer != null) {
+			Debug.Log("<color=magenta>PseudoHelloWorld op sent to the server!</color>");
+			networkingPeer.OpCustom((byte)191, new Dictionary<byte, object>() { }, true);
+		}
+	}
+
+	/// <summary>
+	/// False until you connected to Photon initially. True in offline mode, while connected to any server and even while switching servers.
+	/// </summary>
+	public static bool connected
     {
         get
         {
