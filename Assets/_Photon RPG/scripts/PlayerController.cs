@@ -78,16 +78,18 @@ public class PlayerController : PunBehaviour {
 					player => !player.photonView.isMine
 				)
 			);
-			var action = Random.Range(0, 3);
+			var action = Random.Range(0, 4);
 
-			if (action == 0 && players.Count == 0)
-				action = 1;
+			//if (action == 0 && players.Count == 0)
+			//	action = 1;
+
+			if (players.Count == 0) continue;
 
 			switch (action) {
-				case 0: {
+				case 0: { // flee
 						var player = players[Random.Range(0, players.Count)];
 						var start = Time.time;
-						var time = Random.Range(20f, 30f);
+						var time = Random.Range(10f, 15f);
 						while (true) {
 							yield return null;
 							var duration = Time.time - start;
@@ -107,14 +109,46 @@ public class PlayerController : PunBehaviour {
 							);
 							var distance = (transform.position - player.transform.position).magnitude;
 							if (distance < 3f) {
-								var speed = 2f + (3f - distance);
+								//time = Mathf.Max(time, duration + 5f);
+								var speed = 1.5f + ((3f - distance)/3f)*2f;
 								transform.Translate(-Vector3.back * Time.deltaTime * speed);
 							}
 						}
 					}
 					break;
-				case 1:
-				case 2: {
+				case 1: { // follow
+						var player = players[Random.Range(0, players.Count)];
+						var start = Time.time;
+						var time = Random.Range(10f, 15f);
+						while (true) {
+							yield return null;
+							var duration = Time.time - start;
+							if (duration > time
+							|| player == null || player.transform == null) {
+								yield return new WaitForSeconds(0.5f);
+								break;
+							}
+							if (!aiMovement) break;
+							transform.rotation = Quaternion.Lerp(
+								transform.rotation,
+								Quaternion.LookRotation(
+									Vector3.Scale((transform.position - player.transform.position).normalized, new Vector3(1f, 0f, 1f)),
+									Vector3.up
+								),
+								180f * Time.deltaTime
+							);
+							var distance = (transform.position - player.transform.position).magnitude;
+							if (distance > 2f) {
+								//time = Mathf.Max(time, duration + 5f);
+								transform.Translate(-Vector3.forward * Time.deltaTime * distance);
+							} else {
+								//time = Mathf.Max(time, duration + 5f);
+								transform.Translate(Vector3.forward * Time.deltaTime * distance);
+							}
+						}
+					}
+					break;
+				case 2: { // wander
 						var target2d = new Vector2(Random.Range(-4, 4), Random.Range(-4, 4));
 						while (true) {
 							yield return null;
@@ -141,7 +175,7 @@ public class PlayerController : PunBehaviour {
 							transform.rotation = Quaternion.Lerp(
 								transform.rotation,
 								targetQ,
-								2f * Time.deltaTime
+								3.5f * Time.deltaTime
 							);
 
 							transform.position = Vector3.MoveTowards(
@@ -151,12 +185,33 @@ public class PlayerController : PunBehaviour {
 							);
 
 							if ((transform.position - target3d).magnitude < 0.01) {
-								yield return new WaitForSeconds(Random.Range(1f, 3f));
+								yield return new WaitForSeconds(Random.Range(.2f, 0.5f));
 								break;
 							}
 						}
 					}
 					break;
+				case 3: { // head upside down
+						var duration = 5f;
+						while (true) {
+							yield return null;
+							if (!aiMovement) break;
+							transform.rotation = Quaternion.Lerp(
+								transform.rotation,
+								Quaternion.Euler(
+									transform.rotation.eulerAngles.x,
+									transform.rotation.eulerAngles.y,
+									180f
+								),
+								180f * Time.deltaTime
+							);
+							duration -= Time.deltaTime;
+							if (duration < 0f) break;
+						}
+
+						}
+						break;
+
 			}
 		}
 	}
@@ -177,6 +232,7 @@ public class PlayerController : PunBehaviour {
 		var alt = Input.GetKey(KeyCode.LeftAlt);
 		var lmb = Input.GetMouseButton(0);
 		var rmb = Input.GetMouseButton(1);
+		var w = Input.GetKey(KeyCode.W);
 
 		var piv = Input.GetAxis("Pivot") * (ctrl ? 240f : 180f) * Time.deltaTime;
 		var rot = Input.GetAxis("Horizontal") * (ctrl ? 360f : 180f) * Time.deltaTime;
@@ -210,6 +266,9 @@ public class PlayerController : PunBehaviour {
 			transform.position += qForward * Vector3.forward * fwd;
 		}
 
+		if (ctrl && alt && w) {
+			transform.Translate(-Vector3.forward * 20f * Time.deltaTime);
+		}
 
 		if (rmb || (ctrl && lmb)) {
 			RaycastHit hit;
@@ -222,12 +281,31 @@ public class PlayerController : PunBehaviour {
 			if(Physics.Raycast(ray, out hit, 30f, 1 << LayerMask.NameToLayer("World"))) {
 				//Debug.DrawLine(ray.origin, hit.point, Color.green);
 				//Debug.DrawRay(hit.point, hit.normal * 3f, Color.red);
+				
+				if(transform.position.y < -15) {
+					GetComponent<Rigidbody>().velocity = Vector3.zero;
+					GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+				}
+				//var src = transform.position;
 
-				transform.position = new Vector3(
+				var dest = new Vector3(
 					hit.point.x,
-					transform.position.y,
+					transform.position.y >= -15 ? transform.position.y : 2,
 					hit.point.z
 				);
+				transform.position = dest;
+
+				//var y = Quaternion.LookRotation(Vector3.Scale(src - dest, new Vector3(1, 0, 1)), Vector3.up).eulerAngles.y;
+
+				//transform.rotation = Quaternion.Lerp(
+				//	transform.rotation,
+				//	Quaternion.Euler(
+				//		transform.rotation.eulerAngles.x,
+				//		y,
+				//		transform.rotation.eulerAngles.z
+				//	),
+				//	180f*Time.deltaTime
+				//);
 			}
 		}
 
