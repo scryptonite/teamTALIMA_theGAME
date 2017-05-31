@@ -6,8 +6,7 @@ using UnityEngine.UI;
 using Photon;
 
 public class PlayerController : PunBehaviour {
-
-    //MyNetworkManager networkManager;
+    
     GameManager gameManager;
 
     [Tooltip("The local player instance. Use this to know if the local player is represented in the Scene")]
@@ -22,7 +21,6 @@ public class PlayerController : PunBehaviour {
     public Text txtPlayerUsername;
 
     void Awake() {
-        //networkManager = FindObjectOfType<MyNetworkManager>();
         gameManager = FindObjectOfType<GameManager>();
         
         // keep track of the localPlayer to prevent instantiation when levels are synchronized
@@ -34,7 +32,6 @@ public class PlayerController : PunBehaviour {
     // Use this for initialization
     void Start () {
         txtPlayerUsername = GetComponentInChildren<Text>();
-        //txtPlayerUsername.text = networkManager.playerUsername;
         playerCanvas = transform.Find("Player Canvas");
         txtPlayerUsername.text = photonView.owner.NickName;
 		Debug.LogFormat("User '{0}' appeared!", photonView.owner.NickName);
