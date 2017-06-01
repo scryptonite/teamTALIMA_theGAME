@@ -77,17 +77,14 @@ public class PlayerController : PunBehaviour {
 			playerList.value = -1;
 			return;
 		}
-		var oldPlayer = playerList.value < 0 || playerList.value >= _playerList.Length ? null : _playerList[playerList.value];
 		playerList.options.Clear();
 		playerList.options.AddRange(_playerList.Select(player =>
 			new Dropdown.OptionData(
 				string.Format("\"<color={0}>{1}</color>\"", player == photonView.owner ? "#444444ff" : "black", player.NickName.Replace("<", "<<b></b>"))
 			)
 		));
-		if (playerList.value == -1)
-			playerList.value = System.Array.FindIndex(_playerList, player => player == photonView.owner);
-		else
-			playerList.value = System.Array.FindIndex(_playerList, player => player == oldPlayer);
+		playerList.value = System.Array.FindIndex(_playerList, player => player == photonView.owner);
+		playerList.onValueChanged.Invoke(playerList.value);
 	}
 	public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer) {
 		RenderPlayerList();
