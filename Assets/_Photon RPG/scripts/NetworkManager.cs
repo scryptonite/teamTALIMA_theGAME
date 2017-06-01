@@ -11,7 +11,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Photon;
-
+using System.Collections.Generic;
+using System.Linq;
 
 public class NetworkManager : Photon.PunBehaviour {
 
@@ -21,7 +22,7 @@ public class NetworkManager : Photon.PunBehaviour {
     [Tooltip("UI Text informing player the connection is in progress")]
     public PhotonLogLevel Loglevel = PhotonLogLevel.Informational;
 
-    string _gameVersion = "0.0.2";  // client version
+    static public string gameVersion = "0.0.2";
     bool isConnecting;              // are we currently connecting
 
 	void Awake() {
@@ -56,7 +57,7 @@ public class NetworkManager : Photon.PunBehaviour {
             Debug.Log("<Color=Blue>Connect()</Color> -- called JoinRoom('Level 1')");
         } else {
             // connect to Photon Online Server
-            PhotonNetwork.ConnectUsingSettings(_gameVersion);
+            PhotonNetwork.ConnectUsingSettings(gameVersion);
         }
     }
 
@@ -76,29 +77,25 @@ public class NetworkManager : Photon.PunBehaviour {
         Debug.Log("<Color=Blue>OnPhotonJoinRoomFailed()</Color> -- we failed to join room 'Level 1'");
     }
 
-    public override void OnJoinedRoom() {
-        Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- now this client is in a room.");
+	public override void OnJoinedRoom() {
+		Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- now this client is in a room.");
 
-        // #Critical, if we are the first player load level, else rely on PhotonNetwork.automaticallySyncScene to sync our instance scene
-        if (PhotonNetwork.room.PlayerCount == 1) {
-            // #Critical, load the level
-            PhotonNetwork.LoadLevel("Level 1");
-        } else {
-            Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- no Level loaded because there is more than 1 player here");
-        }
+		// #Critical, if we are the first player load level, else rely on PhotonNetwork.automaticallySyncScene to sync our instance scene
+		if (PhotonNetwork.room.PlayerCount == 1) {
+			// #Critical, load the level
+			PhotonNetwork.LoadLevel("Level 1");
+		} else {
+			Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- no Level loaded because there is more than 1 player here");
+		}
 
-        Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- Master Server Address: " + PhotonNetwork.networkingPeer.MasterServerAddress);
-        Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- Game Server Address: " + PhotonNetwork.networkingPeer.GameServerAddress);
-    }
+		Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- Master Server Address: " + PhotonNetwork.networkingPeer.MasterServerAddress);
+		Debug.Log("<Color=Blue>OnJoinedRoom()</Color> -- Game Server Address: " + PhotonNetwork.networkingPeer.GameServerAddress);
+	}
 
-    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer) {
-        Debug.Log("<Color=Blue>OnPhotonPlayerConnected()</Color> -- New player connected: " + newPlayer.NickName);
-    }
-
-    ///<summary>
-    /// Leave game server.
-    /// </summary>
-    public void LeaveRoom() {
+	///<summary>
+	/// Leave game server.
+	/// </summary>
+	public void LeaveRoom() {
         Debug.Log("<Color=Blue>LeaveRoom()</Color> -- Leaving game server");
         PhotonNetwork.LeaveRoom();
     }

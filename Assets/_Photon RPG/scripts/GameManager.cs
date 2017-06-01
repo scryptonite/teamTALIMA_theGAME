@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,7 +28,7 @@ public class GameManager : PunBehaviour {
     void Start() {
         if (playerPrefab == null) {
             Debug.LogError("<Color=Red>Missing</Color> playerPrefab Reference. Please set it up in GameObject 'Game Manager'");
-        } else if (PlayerController.localPlayer == null) {
+        } else if (PlayerController.instance == null) {
             Debug.Log("We are Instantiating LocalPlayer from " + SceneManager.GetActiveScene().name);
             PhotonNetwork.Instantiate(this.playerPrefab.name, new Vector3(0f, 5f, 0f), Quaternion.identity, 0);
         }

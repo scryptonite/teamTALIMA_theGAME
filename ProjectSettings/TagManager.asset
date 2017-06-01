@@ -9,6 +9,7 @@ TagManager:
   - Rolling Toggle
   - Teleport Button
   - AI Control Toggle
+  - Player List
   layers:
   - Default
   - TransparentFX

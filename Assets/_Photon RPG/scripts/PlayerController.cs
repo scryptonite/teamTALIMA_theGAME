@@ -9,8 +9,8 @@ public class PlayerController : PunBehaviour {
     
     GameManager gameManager;
 
-    [Tooltip("The local player instance. Use this to know if the local player is represented in the Scene")]
-    public static GameObject localPlayer;
+	public bool localPlayer { get { return photonView.isMine; } }
+	public static PlayerController instance;
 
     public Transform playerCanvas;
     public Vector3 ScreenOffset = new Vector3(0f, 30f, 0f);
@@ -22,12 +22,10 @@ public class PlayerController : PunBehaviour {
 
     void Awake() {
         gameManager = FindObjectOfType<GameManager>();
-        
-        // keep track of the localPlayer to prevent instantiation when levels are synchronized
-        if (photonView.isMine) {
-            localPlayer = this.gameObject;
-        }
+		if (photonView.isMine) instance = this;
     }
+
+	Dropdown playerList;
 
     // Use this for initialization
     void Start () {
@@ -38,21 +36,29 @@ public class PlayerController : PunBehaviour {
 
 
 		gameObject.name = string.Format("Player \"{0}\"", photonView.owner.NickName.Trim());
-		if (photonView.isMine) gameObject.name += " <- You";
-
         if (photonView.isMine) {
+			gameObject.name += " <- You";
 			GetComponent<MeshRenderer>().material.color = new Color(8/255f, 168/255f, 241/255f, 1);
 			//GetComponent<MeshRenderer>().material.color = new Color(0x08/ 255f, 0xA8/255f, 0xF1/255f, 1);
 			//GetComponent<MeshRenderer>().material.color = new Color32(8, 168, 241, 255);
+
+			PlayerController.instance = this;
+			playerList = GameObject.FindGameObjectWithTag("Player List").GetComponent<Dropdown>();
+			playerList.onValueChanged.AddListener(player => {
+				if (player == -1) return;
+				var t = FindObjectsOfType<PlayerController>().First(p => p.photonView.owner == PhotonNetwork.playerList[player]).transform;
+				transform.position = t.position;
+				transform.rotation = t.rotation;
+				playerList.value = System.Array.FindIndex(PhotonNetwork.playerList, p => p == photonView.owner);
+			});
+			RenderPlayerList();
+
 
 			var rollingToggle = GameObject.FindWithTag("Rolling Toggle").GetComponent<Toggle>();
 			rollingToggle.isOn = rollingMovement = false;
 			rollingToggle.onValueChanged.AddListener((enabled) => {
 				rollingMovement = rollingToggle.isOn;
 			});
-
-			qForward = Quaternion.Euler(0, transform.rotation.y, 0);
-
 
 			var aiToggle = GameObject.FindWithTag("AI Control Toggle").GetComponent<Toggle>();
 			aiToggle.isOn = aiMovement = false;
@@ -62,6 +68,34 @@ public class PlayerController : PunBehaviour {
 
 			StartCoroutine(AIController());
 		}
+	}
+	void RenderPlayerList(PhotonPlayer[] _playerList = null) {
+		if (_playerList == null) _playerList = PhotonNetwork.playerList;
+		if (!photonView.isMine) return;
+		if (_playerList.Length == 0) {
+			playerList.options.Clear();
+			playerList.value = -1;
+			return;
+		}
+		var oldPlayer = playerList.value < 0 || playerList.value >= _playerList.Length ? null : _playerList[playerList.value];
+		playerList.options.Clear();
+		playerList.options.AddRange(_playerList.Select(player =>
+			new Dropdown.OptionData(
+				string.Format("\"<color={0}>{1}</color>\"", player == photonView.owner ? "#444444ff" : "black", player.NickName.Replace("<", "<<b></b>"))
+			)
+		));
+		if (playerList.value == -1)
+			playerList.value = System.Array.FindIndex(_playerList, player => player == photonView.owner);
+		else
+			playerList.value = System.Array.FindIndex(_playerList, player => player == oldPlayer);
+	}
+	public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer) {
+		RenderPlayerList();
+	}
+	public override void OnPhotonPlayerDisconnected(PhotonPlayer oldPlayer) {
+		var list = PhotonNetwork.playerList.ToList();
+		list.Remove(oldPlayer);
+		RenderPlayerList(list.ToArray());
 	}
 
 	IEnumerator AIController() {
@@ -213,7 +247,6 @@ public class PlayerController : PunBehaviour {
 		}
 	}
 
-	Quaternion qForward;
 	public bool rollingMovement = false;
 	public bool aiMovement = false;
 
@@ -239,11 +272,9 @@ public class PlayerController : PunBehaviour {
 		var rot = Input.GetAxis("Horizontal") * (ctrl ? 360f : 180f) * Time.deltaTime;
 		var fwd = -Input.GetAxis("Vertical") * (ctrl ? 5f : shift ? 1f : 3f) * Time.deltaTime;
 
-		qForward *= Quaternion.Euler(0, rot, 0);
-
-		transform.rotation = qForward * Quaternion.Euler(
+		transform.rotation = Quaternion.Euler(
 			transform.rotation.eulerAngles.x,
-			0,
+			transform.rotation.eulerAngles.y + rot,
 			transform.rotation.eulerAngles.z + piv
 		);
 	
@@ -251,7 +282,7 @@ public class PlayerController : PunBehaviour {
 		if (Input.GetKey(KeyCode.H)) {
 			transform.rotation = Quaternion.Lerp(
 				transform.rotation,
-				qForward * Quaternion.Euler(
+				Quaternion.Euler(
 					transform.rotation.eulerAngles.x,
 					0f,
 					0f
@@ -264,7 +295,7 @@ public class PlayerController : PunBehaviour {
 			transform.rotation *= Quaternion.Euler(fwd * 30f, 0, 0);
 			transform.Translate(Vector3.forward * fwd);
 		} else {
-			transform.position += qForward * Vector3.forward * fwd;
+			transform.position += Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0) * Vector3.forward * fwd;
 		}
 
 		if (ctrl && alt && w) {

@@ -24,6 +24,8 @@ public class Login : Photon.PunBehaviour {
     public Text progressLabel;
     [Tooltip("UI Button that triggers the connection")]
     public Button playButton;
+	[Tooltip("UI Text showing the game version")]
+	public Text versionText;
 
     [Tooltip("UI Text informing player the connection is in progress")]
     public PhotonLogLevel Loglevel = PhotonLogLevel.Informational;
@@ -42,6 +44,7 @@ public class Login : Photon.PunBehaviour {
 
 	void Awake() {
 		networkManager = NetworkManager.instance;
+		versionText.text = string.Format("v{0}", NetworkManager.gameVersion);
 
 		var prefixes = new string[] {
 			"Kappa",
@@ -159,17 +162,13 @@ public class Login : Photon.PunBehaviour {
 		PlayerPrefs.Save();
 	}
 
-	//IEnumerator SetActiveLater(GameObject go, float delay, bool active = true) {
-	//	yield return new WaitForSecondsRealtime(delay);
-	//	go.SetActive(active);
-	//}
 	public override void OnDisconnectedFromPhoton() {
 		progressLabel.gameObject.SetActive(true);
 		progressLabel.text = "<color=red>Disconnected</color>";
-		//StartCoroutine(SetActiveLater(progressLabel.gameObject, 1f, false));
 		
 		field.interactable = true;
 		playButton.interactable = true;
+		FocusField();
 
 		Debug.LogWarning("<Color=Red>OnDisconnectedFromPhoton()</Color>");
     }
