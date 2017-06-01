@@ -40,53 +40,57 @@ public class Login : Photon.PunBehaviour {
 		new ServerAddress { Name = "Local Server", IPAddress = "127.0.0.1", Port = 5055 },
 	};
 
-    void Awake() {
-        networkManager = NetworkManager.instance;
+	void Awake() {
+		networkManager = NetworkManager.instance;
 
-        var prefixes = new string[] {
-            "Kappa",
-            "PogChamp",
-            "Keepo",
-            "FeelsGoodMan",
-            "FeelsBadMan",
-            "SwiftRage",
-            "teamTALIMA",
-            "Beastie",
-            "MrDestructoid",
-            "OhMyDog",
-            "ResidentSleeper",
-            "CoolStoryBob",
-            "CoolCat",
-            "\u0295\u2022\u1d25\u2022\u0294",
-            "VoHiYo",
-            "RaccAttack"
-        };
-        field.text = string.Format("{0}{1}", prefixes[Random.Range(0, prefixes.Length)], Random.Range(0, 1000000).ToString().PadLeft(6, '0'));
+		var prefixes = new string[] {
+			"Kappa",
+			"PogChamp",
+			"Keepo",
+			"FeelsGoodMan",
+			"FeelsBadMan",
+			"SwiftRage",
+			"teamTALIMA",
+			"Beastie",
+			"MrDestructoid",
+			"OhMyDog",
+			"ResidentSleeper",
+			"CoolStoryBob",
+			"CoolCat",
+			"\u0295\u2022\u1d25\u2022\u0294",
+			"VoHiYo",
+			"RaccAttack"
+		};
+		if (PlayerPrefs.HasKey("username") && PlayerPrefs.GetString("username").Trim().Length > 0) {
+			field.text = PlayerPrefs.GetString("username").Trim();
+		} else {
+			field.text = string.Format("{0}{1}", prefixes[Random.Range(0, prefixes.Length)], Random.Range(0, 1000000).ToString().PadLeft(6, '0'));
+		}
 
-        progressLabel.gameObject.SetActive(false);
-        field.onValueChanged.AddListener((str) => {
-            var text = field.text.Trim();
-            var submittable = text.Length > 0 && text.Length <= 32;
-            playButton.interactable = field.interactable && submittable;
-        });
-        field.interactable = true;
+		progressLabel.gameObject.SetActive(false);
+		field.onValueChanged.AddListener((str) => {
+			var text = field.text.Trim();
+			var submittable = text.Length > 0 && text.Length <= 32;
+			playButton.interactable = field.interactable && submittable;
+		});
+		field.interactable = true;
 
-        playButton.onClick.AddListener(() => {
-            if (playButton.interactable) {
-                field.interactable = false;
-                playButton.interactable = false;
-                PlayerLogin();
-            }
-        });
-        playButton.interactable = false;
+		playButton.onClick.AddListener(() => {
+			if (playButton.interactable) {
+				field.interactable = false;
+				playButton.interactable = false;
+				PlayerLogin();
+			}
+		});
+		playButton.interactable = false;
 
-        field.onEndEdit.AddListener((result) => {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) {
-                field.onValueChanged.Invoke(result);
-                playButton.onClick.Invoke();
-                FocusField();
-            }
-        });
+		field.onEndEdit.AddListener((result) => {
+			if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) {
+				field.onValueChanged.Invoke(result);
+				playButton.onClick.Invoke();
+				FocusField();
+			}
+		});
 
 		var settings = (ServerSettings)Resources.Load(PhotonNetwork.serverSettingsAssetFile, typeof(ServerSettings));
 		serverChoice.options.Clear();
@@ -107,7 +111,8 @@ public class Login : Photon.PunBehaviour {
 				serverChoice.interactable = false;
 			}
 		});
-
+	}
+	void Start() {
         FocusField();
         field.onValueChanged.Invoke(field.text);
     }
@@ -137,6 +142,7 @@ public class Login : Photon.PunBehaviour {
     public void PlayerLogin() {
         var username = field.text.Trim();
         username = username.Substring(0, Mathf.Min(username.Length, 32));
+		field.text = username;
 		//networkManager.ReceiveUsername(username);
 		// Connect();
 		PhotonNetwork.playerName = username;
@@ -147,12 +153,17 @@ public class Login : Photon.PunBehaviour {
         // Debug.Log("<Color=Blue>PlayerLogin()</Color> -- We call Connect()");
         networkManager.Connect();
     }
-	
+
+	public override void OnConnectedToPhoton() {
+		PlayerPrefs.SetString("username", PhotonNetwork.playerName);
+		PlayerPrefs.Save();
+	}
+
 	//IEnumerator SetActiveLater(GameObject go, float delay, bool active = true) {
 	//	yield return new WaitForSecondsRealtime(delay);
 	//	go.SetActive(active);
 	//}
-    public override void OnDisconnectedFromPhoton() {
+	public override void OnDisconnectedFromPhoton() {
 		progressLabel.gameObject.SetActive(true);
 		progressLabel.text = "<color=red>Disconnected</color>";
 		//StartCoroutine(SetActiveLater(progressLabel.gameObject, 1f, false));
