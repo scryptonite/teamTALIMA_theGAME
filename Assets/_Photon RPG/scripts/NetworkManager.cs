@@ -111,6 +111,6 @@ public class NetworkManager : Photon.PunBehaviour {
     }
 
     public override void OnDisconnectedFromPhoton() {
-        Debug.LogWarning("<Color=Red>OnDisconnectedFromPhoton()</Color>");
+        //Debug.LogWarning("<Color=Red>OnDisconnectedFromPhoton()</Color>");
     }
 }
