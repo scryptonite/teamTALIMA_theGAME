@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Username Input
+  - Respawn Shield
+  - Main Canvas
+  - Interaction Indicator
   layers:
   - Default
   - TransparentFX
@@ -15,7 +18,7 @@ TagManager:
   - 
   - 
   - Player
-  - 
+  - Interact
   - 
   - 
   - 

@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [AddComponentMenu("Camera Controllers/Better Mouse Orbit")]
 public class CameraController : MonoBehaviour
@@ -49,10 +52,12 @@ public class CameraController : MonoBehaviour
 
     void LateUpdate()
     {
+
         if (target)
         {
             // determine distance
             float prevDistance = _curDistance;
+
 
             distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel") * zoomSpeed, distanceMin, distanceMax);
             _curDistance = Mathf.Lerp(_curDistance, distance, Time.deltaTime * zoomLerpSpeed);
@@ -69,6 +74,20 @@ public class CameraController : MonoBehaviour
 
             // cursor locked?
             if (panLocksMouse) {
+                var pointer = new PointerEventData(EventSystem.current);
+                pointer.position = Input.mousePosition; // improve for mobile
+
+                var hits = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointer, hits);
+
+                if (hits.Any(item => {
+                    return item.gameObject.GetComponent<UnityEngine.UI.Button>() != null
+                        || item.gameObject.GetComponent<UnityEngine.UI.InputField>() != null;
+                })) {
+                    mouseButtonActive = false;
+                }
+
+
                 MousePointer.lockState = mouseButtonActive ? CursorLockMode.Locked : CursorLockMode.None;
                 // cursor visible when mouse is not active
                 MousePointer.visible = !mouseButtonActive;
@@ -104,6 +123,7 @@ public class CameraController : MonoBehaviour
         } else {
             transform.position += (transform.forward * -1) * Time.deltaTime;
         }
+        
     }
 
     public static float ClampAngle(float angle)

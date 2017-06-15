@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,7 +32,7 @@ public class PlayerController : PunBehaviour {
         cameraController = mainCamera.GetComponent<CameraController>();
         
         // keep track of the localPlayer to prevent instantiation when levels are synchronized
-        if (isLocalPlayer) {
+        if (isLocalPlayer && localPlayer == null) {
             localPlayer = this.gameObject;
             cameraController.target = transform;
         }

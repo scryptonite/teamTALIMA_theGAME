@@ -44,6 +44,7 @@ GameObject:
   - component: {fileID: 114698527043586634}
   - component: {fileID: 114019161044576486}
   - component: {fileID: 114650690372497238}
+  - component: {fileID: 114012127529206536}
   m_Layer: 8
   m_Name: teamTALIMA Player
   m_TagString: Untagged
@@ -235,6 +236,20 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &114012127529206536
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1416093075307488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64086149ec2337743b3f1681624639f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvas: {fileID: 0}
+  interactionIndicator: {fileID: 0}
+  playerReach: 2
 --- !u!114 &114019161044576486
 MonoBehaviour:
   m_ObjectHideFlags: 1
